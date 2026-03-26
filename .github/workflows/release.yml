@@ -130,6 +130,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download backend artifacts
         uses: actions/download-artifact@v4
@@ -150,6 +152,54 @@ jobs:
           cp .env.example release-assets/
           cp DOCKER.md release-assets/
           cp README.md release-assets/
+          cp CHANGELOG.md release-assets/
+
+      - name: Generate release metadata
+        env:
+          CURRENT_TAG: ${{ github.ref_name }}
+        run: |
+          mkdir -p release-assets
+          echo "${CURRENT_TAG}" > release-assets/VERSION.txt
+          PREVIOUS_TAG=$(git tag --sort=-creatordate | grep '^v' | grep -vx "${CURRENT_TAG}" | head -n 1 || true)
+
+          {
+            echo "# ${CURRENT_TAG} 版本说明"
+            echo
+            echo "- 标签：${CURRENT_TAG}"
+            echo "- 提交：${GITHUB_SHA}"
+            if [ -n "${PREVIOUS_TAG}" ]; then
+              echo "- 对比区间：${PREVIOUS_TAG} -> ${CURRENT_TAG}"
+            else
+              echo "- 对比区间：首次发布或未找到上一个标签"
+            fi
+            echo
+            echo "## 附件说明"
+            echo
+            echo "- Go 后端发布二进制"
+            echo "- 前端 dist 构建包"
+            echo "- Docker 部署文件"
+            echo "- 环境变量模板"
+            echo "- SHA256 校验文件"
+          } > release-assets/RELEASE_NOTES.md
+
+          {
+            echo "# ${CURRENT_TAG} 变更摘要"
+            echo
+            if [ -n "${PREVIOUS_TAG}" ]; then
+              echo "## 提交区间"
+              echo
+              echo "\`${PREVIOUS_TAG}..${CURRENT_TAG}\`"
+              echo
+              echo "## 提交记录"
+              echo
+              git log --pretty=format:'- %h %s' "${PREVIOUS_TAG}..HEAD"
+            else
+              echo "## 提交记录"
+              echo
+              git log --pretty=format:'- %h %s'
+            fi
+            echo
+          } > release-assets/CHANGELOG-${CURRENT_TAG}.md
 
       - name: Generate checksums
         working-directory: ./release-assets

@@ -1,0 +1,26 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+  categories:
+    - title: 功能新增
+      labels:
+        - feature
+        - enhancement
+    - title: 问题修复
+      labels:
+        - fix
+        - bugfix
+        - bug
+    - title: 文档与说明
+      labels:
+        - docs
+        - documentation
+    - title: 维护与重构
+      labels:
+        - chore
+        - refactor
+        - ci
+    - title: 其他变更
+      labels:
+        - "*"
