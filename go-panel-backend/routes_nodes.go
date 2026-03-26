@@ -195,7 +195,7 @@ func (s *Server) handleNodeInstallCommand(w http.ResponseWriter, r *http.Request
 		return
 	}
 	command := fmt.Sprintf(
-		"curl -fsSL https://raw.githubusercontent.com/bqlpfy/flux-panel/main/install.sh -o ./install.sh && chmod 700 ./install.sh && ./install.sh -a %s -s %s",
+		"curl -fsSL https://raw.githubusercontent.com/GSDPGIT/dlamgo/main/scripts/install-node.sh -o ./install-node.sh && chmod 700 ./install-node.sh && ./install-node.sh -a %s -s %s",
 		processServerAddress(cfg.Value),
 		node.Secret,
 	)

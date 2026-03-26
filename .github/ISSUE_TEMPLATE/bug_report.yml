@@ -1,0 +1,69 @@
+name: Bug 反馈
+description: 提交一个问题报告
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢提交问题，请尽量提供完整信息，方便排查。
+
+  - type: input
+    id: summary
+    attributes:
+      label: 问题摘要
+      description: 用一句话描述问题
+      placeholder: 例如：Docker 启动后前端无法登录
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 运行环境
+      description: 请填写系统、Docker、浏览器、部署方式等
+      placeholder: |
+        系统：
+        Docker 版本：
+        浏览器：
+        部署方式：
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 请尽量写清楚每一步
+      placeholder: |
+        1. 执行 ...
+        2. 打开 ...
+        3. 点击 ...
+        4. 出现错误 ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果
+      placeholder: 你原本期望发生什么
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+      placeholder: 实际发生了什么
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志或截图
+      description: 可粘贴日志、报错或截图
+      render: shell
+

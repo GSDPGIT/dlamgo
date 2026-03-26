@@ -1,0 +1,37 @@
+name: 功能建议
+description: 提交一个功能请求或改进建议
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        欢迎提交功能建议，请尽量说明使用场景和收益。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 当前痛点
+      description: 你现在遇到了什么问题
+      placeholder: 例如：当前节点管理无法满足某种场景
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 你希望项目如何改进
+      placeholder: 例如：增加一个新的节点安装方式
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefit
+    attributes:
+      label: 预期收益
+      description: 这个功能能解决什么问题，或者带来什么价值
+    validations:
+      required: true
+
