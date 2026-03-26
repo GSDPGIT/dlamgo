@@ -153,6 +153,9 @@ jobs:
           cp DOCKER.md release-assets/
           cp README.md release-assets/
           cp CHANGELOG.md release-assets/
+          cp scripts/install-node.sh release-assets/
+          if [ -f doc/发布流程建议.md ]; then cp doc/发布流程建议.md release-assets/; fi
+          if [ -f doc/仓库结构说明.md ]; then cp doc/仓库结构说明.md release-assets/; fi
 
       - name: Generate release metadata
         env:
@@ -178,6 +181,7 @@ jobs:
             echo "- Go 后端发布二进制"
             echo "- 前端 dist 构建包"
             echo "- Docker 部署文件"
+            echo "- 节点安装脚本"
             echo "- 环境变量模板"
             echo "- SHA256 校验文件"
           } > release-assets/RELEASE_NOTES.md
@@ -201,6 +205,58 @@ jobs:
             echo
           } > release-assets/CHANGELOG-${CURRENT_TAG}.md
 
+          {
+            echo "# ${CURRENT_TAG}"
+            echo
+            echo "## 版本定位"
+            echo
+            echo "这是 DLAMGO 的自动发布版本。"
+            echo
+            echo "- 标签：${CURRENT_TAG}"
+            echo "- 提交：${GITHUB_SHA}"
+            if [ -n "${PREVIOUS_TAG}" ]; then
+              echo "- 对比区间：${PREVIOUS_TAG} -> ${CURRENT_TAG}"
+            else
+              echo "- 对比区间：首次发布或未找到上一个标签"
+            fi
+            echo
+            echo "## 快速安装"
+            echo
+            echo "### Docker Compose"
+            echo
+            echo '```bash'
+            echo "cp .env.example .env"
+            echo "docker compose up --build -d"
+            echo '```'
+            echo
+            echo "### 节点接入"
+            echo
+            echo "请使用附件中的 \`install-node.sh\`，或在面板中生成节点安装命令。"
+            echo
+            echo "## 附件列表"
+            echo
+            echo "- 后端二进制包"
+            echo "- 前端 dist 构建包"
+            echo "- docker-compose.yml"
+            echo "- .env.example"
+            echo "- install-node.sh"
+            echo "- README.md"
+            echo "- DOCKER.md"
+            echo "- CHANGELOG.md"
+            echo "- RELEASE_NOTES.md"
+            echo "- CHANGELOG-${CURRENT_TAG}.md"
+            echo "- SHA256SUMS.txt"
+            echo
+            echo "## 变更摘要"
+            echo
+            if [ -n "${PREVIOUS_TAG}" ]; then
+              git log --pretty=format:'- %h %s' "${PREVIOUS_TAG}..HEAD"
+            else
+              git log --pretty=format:'- %h %s'
+            fi
+            echo
+          } > release-assets/RELEASE_BODY.md
+
       - name: Generate checksums
         working-directory: ./release-assets
         run: |
@@ -209,6 +265,6 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body_path: release-assets/RELEASE_BODY.md
           files: |
             release-assets/*
