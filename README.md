@@ -1,102 +1,543 @@
-# flux-panel转发面板 哆啦A梦转发面板
+# DLAMGO
 
-## 项目更新说明
-由于一些个人原因，**flux-panel** 将暂停更新一段时间，**恢复更新时间暂不确定**。
+## 项目简介
 
-在此期间，项目不会继续推进新功能或修复问题，对可能带来的不便表示抱歉。当前已有功能仍可正常使用，也欢迎大家继续 Fork 或自行维护。
+DLAMGO 是一个以 **Go + SQLite + Vite** 为默认运行方案的流量转发管理面板。
 
-如后续恢复更新，我会第一时间在仓库中说明。  
-感谢大家的理解与支持。
+这个仓库保留了原项目中的多套代码与客户端资源，但当前默认、推荐、实际可部署的面板方案是：
 
+- 前端：`vite-frontend`
+- 后端：`go-panel-backend`
+- 数据库：`SQLite`
+- 节点通信：基于仓库内的 `go-gost`
+- 推荐部署方式：`Docker Compose`
 
-# 赞助商
-<p align="center">
-  <a href="https://vps.town" style="margin: 0 20px; text-align:center;">
-    <img src="./doc/vpstown.png" width="300">
-  </a>
+当前仓库仍保留以下目录，主要用于兼容、迁移或参考：
 
-  <a href="https://whmcs.as211392.com" style="margin: 0 20px; text-align:center;">
-    <img src="./doc/as211392.png" width="300">
-  </a>
-</p>
+- `springboot-backend`：旧版 Java 后端，**不再作为默认部署方案**
+- `android-app`：Android 客户端工程
+- `ios-app`：iOS 客户端工程
 
-
-本项目基于 [go-gost/gost](https://github.com/go-gost/gost) 和 [go-gost/x](https://github.com/go-gost/x) 两个开源库，实现了转发面板。
----
-## 特性
-
-- 支持按 **隧道账号级别** 管理流量转发数量，可用于用户/隧道配额控制
-- 支持 **TCP** 和 **UDP** 协议的转发
-- 支持两种转发模式：**端口转发** 与 **隧道转发**
-- 可针对 **指定用户的指定隧道进行限速** 设置
-- 支持配置 **单向或双向流量计费方式**，灵活适配不同计费模型
-- 提供灵活的转发策略配置，适用于多种网络场景
-
-
-## 部署流程
----
-### Docker Compose部署
-#### 快速部署
-面板端(稳定版)：
-```bash
-curl -L https://raw.githubusercontent.com/bqlpfy/flux-panel/refs/heads/main/panel_install.sh -o panel_install.sh && chmod +x panel_install.sh && ./panel_install.sh
-```
-节点端(稳定版)：
-```bash
-curl -L https://raw.githubusercontent.com/bqlpfy/flux-panel/refs/heads/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
-
-```
-
-面板端(开发版)：
-```bash
-curl -L https://raw.githubusercontent.com/bqlpfy/flux-panel/refs/heads/beta/panel_install.sh -o panel_install.sh && chmod +x panel_install.sh && ./panel_install.sh
-```
-节点端(开发版)：
-```bash
-curl -L https://raw.githubusercontent.com/bqlpfy/flux-panel/refs/heads/beta/install.sh -o install.sh && chmod +x install.sh && ./install.sh
-
-```
-
-#### 默认管理员账号
-
-- **账号**: admin_user
-- **密码**: admin_user
-
-> ⚠️ 首次登录后请立即修改默认密码！
-
-
-## 免责声明
-
-本项目仅供个人学习与研究使用，基于开源项目进行二次开发。  
-
-使用本项目所带来的任何风险均由使用者自行承担，包括但不限于：  
-
-- 配置不当或使用错误导致的服务异常或不可用；  
-- 使用本项目引发的网络攻击、封禁、滥用等行为；  
-- 服务器因使用本项目被入侵、渗透、滥用导致的数据泄露、资源消耗或损失；  
-- 因违反当地法律法规所产生的任何法律责任。  
-
-本项目为开源的流量转发工具，仅限合法、合规用途。  
-使用者必须确保其使用行为符合所在国家或地区的法律法规。  
-
-**作者不对因使用本项目导致的任何法律责任、经济损失或其他后果承担责任。**  
-**禁止将本项目用于任何违法或未经授权的行为，包括但不限于网络攻击、数据窃取、非法访问等。**  
-
-如不同意上述条款，请立即停止使用本项目。  
-
-作者对因使用本项目所造成的任何直接或间接损失概不负责，亦不提供任何形式的担保、承诺或技术支持。  
-
-
-请务必在合法、合规、安全的前提下使用本项目。  
+如果你只是想把面板跑起来，请优先使用本文档中的 **Docker Compose 部署**。
 
 ---
-## ⭐ 喝杯咖啡！（USDT）
 
-| 网络       | 地址                                                                 |
-|------------|----------------------------------------------------------------------|
-| BNB(BEP20) | `0x755492c03728851bbf855daa28a1e089f9aca4d1`                          |
-| TRC20      | `TYh2L3xxXpuJhAcBWnt3yiiADiCSJLgUm7`                                  |
-| Aptos      | `0xf2f9fb14749457748506a8281628d556e8540d1eb586d202cd8b02b99d369ef8`  |
+## 主要功能
 
-[![Star History Chart](https://api.star-history.com/svg?repos=bqlpfy/flux-panel&type=Date)](https://www.star-history.com/#bqlpfy/flux-panel&Date)
+- 支持 TCP / UDP 转发
+- 支持端口转发与隧道转发两种模式
+- 支持按用户维度控制流量、转发数量、到期时间
+- 支持按用户-隧道维度进行授权与配额控制
+- 支持转发限速规则
+- 支持节点在线状态、基础系统信息展示
+- 支持通过 WebSocket 向节点下发服务、链路、限速等控制指令
+- 默认使用 SQLite，部署轻量，适合低配置服务器
 
+---
+
+## 当前默认架构
+
+### 面板架构
+
+- 浏览器访问 `vite-frontend`
+- `vite-frontend` 通过 Nginx 反向代理请求 `go-panel-backend`
+- `go-panel-backend` 使用 SQLite 保存业务数据
+- 节点端通过 `go-gost` 与后端建立连接
+
+### 默认端口
+
+- 前端默认端口：`6366`
+- 后端默认端口：`6365`
+
+---
+
+## 目录说明
+
+### 与部署直接相关
+
+- [docker-compose.yml](/c:/Users/Lee/Desktop/dlam/docker-compose.yml)：默认 Docker 编排文件
+- [.env.example](/c:/Users/Lee/Desktop/dlam/.env.example)：环境变量模板
+- [go-panel-backend](/c:/Users/Lee/Desktop/dlam/go-panel-backend)：Go 后端
+- [vite-frontend](/c:/Users/Lee/Desktop/dlam/vite-frontend)：前端
+- [go-gost](/c:/Users/Lee/Desktop/dlam/go-gost)：节点端通信与控制逻辑
+
+### 历史/兼容目录
+
+- [springboot-backend](/c:/Users/Lee/Desktop/dlam/springboot-backend)：旧 Java 后端
+- [android-app](/c:/Users/Lee/Desktop/dlam/android-app)：Android 客户端
+- [ios-app](/c:/Users/Lee/Desktop/dlam/ios-app)：iOS 客户端
+
+---
+
+## 部署方式总览
+
+本仓库提供两种主要使用方式：
+
+1. **Docker Compose 部署**
+适合大多数用户，最省事，也是默认推荐方式。
+
+2. **源码运行**
+适合开发、调试或二次开发。
+
+---
+
+## 一、Docker Compose 部署
+
+## 1. 环境要求
+
+请先确保你的机器已经安装：
+
+- Docker Desktop，或 Docker Engine + Docker Compose
+
+建议最低资源：
+
+- CPU：1 核
+- 内存：1 GB
+- 磁盘：2 GB 以上可用空间
+
+---
+
+## 2. 准备环境变量
+
+在仓库根目录执行：
+
+```bash
+cp .env.example .env
+```
+
+然后编辑 `.env`，至少建议修改下面几项：
+
+```env
+BACKEND_PORT=6365
+FRONTEND_PORT=6366
+JWT_SECRET=请改成你自己的长随机字符串
+ADMIN_USERNAME=admin_user
+ADMIN_PASSWORD=请改成你自己的强密码
+CORS_ALLOWED_ORIGINS=
+LOGIN_RATE_LIMIT_PER_MINUTE=12
+```
+
+### 字段说明
+
+- `BACKEND_PORT`
+  映射到宿主机的后端端口，默认 `6365`
+
+- `FRONTEND_PORT`
+  映射到宿主机的前端端口，默认 `6366`
+
+- `JWT_SECRET`
+  登录令牌签名密钥，**强烈建议手动设置**
+
+- `ADMIN_USERNAME`
+  初始管理员用户名，默认 `admin_user`
+
+- `ADMIN_PASSWORD`
+  初始管理员密码，**强烈建议手动设置**
+
+- `CORS_ALLOWED_ORIGINS`
+  允许跨域来源，留空时更适合本地和默认反代场景
+
+- `LOGIN_RATE_LIMIT_PER_MINUTE`
+  登录接口限速，默认每分钟 `12` 次
+
+---
+
+## 3. 启动服务
+
+在仓库根目录执行：
+
+```bash
+docker compose up --build -d
+```
+
+启动完成后默认访问地址：
+
+- 前端：`http://127.0.0.1:6366`
+- 后端：`http://127.0.0.1:6365`
+
+---
+
+## 4. 查看运行状态
+
+查看容器状态：
+
+```bash
+docker compose ps
+```
+
+查看后端日志：
+
+```bash
+docker compose logs -f backend
+```
+
+查看前端日志：
+
+```bash
+docker compose logs -f frontend
+```
+
+---
+
+## 5. 首次登录
+
+如果你在 `.env` 中显式设置了：
+
+```env
+ADMIN_USERNAME=admin_user
+ADMIN_PASSWORD=你的密码
+```
+
+那么直接使用这组账号密码登录即可。
+
+如果你没有设置 `ADMIN_PASSWORD`，后端会在首次启动时自动生成一个随机密码，并写到日志中。你需要通过下面命令查看：
+
+```bash
+docker compose logs backend
+```
+
+建议首次登录后立刻修改密码。
+
+---
+
+## 6. 数据保存位置
+
+Docker 部署默认使用命名卷：
+
+- `sqlite_data`
+
+SQLite 数据库文件保存在容器内：
+
+- `/data/flux-panel.db`
+
+如果你删除容器但不删除卷，数据仍会保留。
+
+---
+
+## 7. 停止、重启、删除
+
+停止服务：
+
+```bash
+docker compose stop
+```
+
+重启服务：
+
+```bash
+docker compose restart
+```
+
+删除容器但保留数据卷：
+
+```bash
+docker compose down
+```
+
+删除容器并删除数据卷：
+
+```bash
+docker compose down -v
+```
+
+---
+
+## 8. 升级
+
+如果你更新了代码，升级流程如下：
+
+```bash
+git pull
+docker compose build --no-cache
+docker compose up -d
+```
+
+如果你不想强制重新构建，也可以先试：
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+---
+
+## 二、源码运行（开发/调试）
+
+## 1. 后端运行
+
+进入目录：
+
+```bash
+cd go-panel-backend
+```
+
+安装依赖：
+
+```bash
+go mod tidy
+```
+
+运行：
+
+```bash
+APP_ADDR=127.0.0.1:6365 \
+DATABASE_PATH=./data/flux-panel.db \
+JWT_SECRET=your-secret \
+ADMIN_USERNAME=admin_user \
+ADMIN_PASSWORD=your-password \
+go run .
+```
+
+Windows PowerShell 示例：
+
+```powershell
+$env:APP_ADDR="127.0.0.1:6365"
+$env:DATABASE_PATH=".\data\flux-panel.db"
+$env:JWT_SECRET="your-secret"
+$env:ADMIN_USERNAME="admin_user"
+$env:ADMIN_PASSWORD="your-password"
+go run .
+```
+
+---
+
+## 2. 前端运行
+
+进入目录：
+
+```bash
+cd vite-frontend
+```
+
+安装依赖：
+
+```bash
+npm install --legacy-peer-deps
+```
+
+本地开发时，确认 [vite-frontend/.env.development](/c:/Users/Lee/Desktop/dlam/vite-frontend/.env.development) 中包含：
+
+```env
+VITE_API_BASE=http://127.0.0.1:6365
+```
+
+启动开发服务器：
+
+```bash
+npm run dev
+```
+
+生产构建：
+
+```bash
+npm run build
+```
+
+---
+
+## 三、节点接入
+
+节点接入依赖面板中的“节点管理”和仓库中的 `go-gost` / `install.sh`。
+
+## 1. 面板启动后先做的配置
+
+请先登录面板，在“网站配置”里设置：
+
+- `面板后端地址`
+
+这个地址非常重要，用于节点回连面板。
+
+建议填写格式：
+
+- `ip:port`
+- `http://ip:port`
+- `https://域名:端口`
+
+如果你做了 HTTPS / WSS 反代，也可以填写你的反代地址。
+
+---
+
+## 2. 创建节点
+
+在面板里进入“节点管理”：
+
+1. 新建节点
+2. 填写入口 IP、服务器 IP、端口范围
+3. 保存后获取安装命令
+
+面板会生成一条节点安装命令。
+
+---
+
+## 3. 节点安装
+
+如果你使用面板生成的安装命令，通常会类似：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/你的仓库/你的分支/install.sh -o ./install.sh && chmod 700 ./install.sh && ./install.sh -a 面板地址 -s 节点密钥
+```
+
+说明：
+
+- `-a`：面板地址
+- `-s`：节点密钥
+
+节点安装完成后，会尝试连接面板并上报状态。
+
+---
+
+## 四、默认安全策略
+
+当前默认实现已经处理了以下问题：
+
+- 管理员密码不再强制使用固定默认值
+- 登录密码使用更安全的密码哈希
+- 管理端 WebSocket 改为短时 `ticket` 鉴权
+- 节点上报 HTTP 请求改为通过 Header 传递节点密钥
+- 登录接口支持基础限速
+- 面板默认采用 Go + SQLite，降低内存占用
+
+---
+
+## 五、已知说明
+
+## 1. Java 后端仍在仓库中
+
+仓库里仍保留 [springboot-backend](/c:/Users/Lee/Desktop/dlam/springboot-backend)，但当前默认部署和本文档都不再使用它。
+
+如果你只是部署面板，请直接使用：
+
+- `go-panel-backend`
+- `vite-frontend`
+- `docker-compose.yml`
+
+## 2. 前端安装参数
+
+前端依赖树中存在上游 peer dependency 约束，因此在某些环境中需要使用：
+
+```bash
+npm install --legacy-peer-deps
+```
+
+Docker 构建中已经按这个方式处理。
+
+---
+
+## 六、备份与迁移
+
+## 1. 备份 SQLite 数据库
+
+Docker 部署中，数据库在容器内：
+
+- `/data/flux-panel.db`
+
+你可以通过以下方式备份：
+
+```bash
+docker compose exec backend sh -c "cp /data/flux-panel.db /data/flux-panel.db.bak"
+```
+
+或者直接导出卷内容。
+
+## 2. 源码运行时的数据库
+
+如果你是源码运行，只需要备份：
+
+- `go-panel-backend/data/flux-panel.db`
+
+以及可能存在的：
+
+- `flux-panel.db-shm`
+- `flux-panel.db-wal`
+
+---
+
+## 七、常见问题
+
+## 1. `docker compose build` 拉镜像失败
+
+请检查：
+
+- Docker Desktop 是否已启动
+- Docker 是否配置了正确代理
+- 是否能正常拉取：
+
+```bash
+docker pull alpine:3.20
+docker pull golang:1.23-alpine
+docker pull node:20.19.0
+docker pull nginx:stable-alpine
+```
+
+## 2. 登录后无法看到节点在线
+
+请检查：
+
+- 节点是否真的执行了安装脚本
+- 面板“网站配置”中的后端地址是否正确
+- 节点与面板之间的网络是否可达
+- 反代是否放通了 `/system-info` WebSocket
+
+## 3. 前端能打开但接口报错
+
+请检查：
+
+- 后端容器是否启动成功
+- Nginx 是否正确代理 `/api/v1`
+- 浏览器访问：
+
+```bash
+http://你的地址/api/v1/captcha/check
+```
+
+## 4. 端口被占用
+
+修改 `.env` 中：
+
+```env
+BACKEND_PORT=新的端口
+FRONTEND_PORT=新的端口
+```
+
+然后重启：
+
+```bash
+docker compose up -d --build
+```
+
+---
+
+## 八、推荐使用方式
+
+如果你只是想稳定使用，请按下面顺序：
+
+1. 修改 `.env`
+2. 执行 `docker compose up --build -d`
+3. 登录面板
+4. 在网站配置里设置“面板后端地址”
+5. 创建节点并获取安装命令
+6. 节点安装完成后再创建隧道、用户和转发
+
+---
+
+## 九、免责声明
+
+本项目仅供学习、研究与合法合规用途使用。
+
+请勿将本项目用于任何违法、滥用、攻击、绕过授权或其他不当用途。
+
+使用本项目造成的风险，包括但不限于：
+
+- 服务异常
+- 数据丢失
+- 节点失联
+- 网络封禁
+- 法律风险
+
+均由使用者自行承担。
+
+---
+
+## 十、许可证
+
+本项目遵循仓库中的 [LICENSE](/c:/Users/Lee/Desktop/dlam/LICENSE)。
