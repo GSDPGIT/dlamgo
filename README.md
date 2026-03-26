@@ -508,7 +508,19 @@ curl -fsSL https://raw.githubusercontent.com/你的仓库/你的分支/scripts/i
 
 - `.github/workflows/docker-publish.yml`
 
-这个工作流会在 `v*` 标签触发时尝试推送镜像，但前提是你已经配置仓库 Secrets：
+这个工作流会在 `v*` 标签触发时尝试推送镜像，并默认发布：
+
+- `linux/amd64`
+- `linux/arm64`
+
+同时自动生成：
+
+- `latest`
+- 当前标签名
+
+两个镜像标签。
+
+前提是你已经配置仓库 Secrets：
 
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
