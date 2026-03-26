@@ -1,0 +1,164 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  backend-artifacts:
+    name: Build Backend Artifacts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            output: flux-panel-backend-linux-amd64
+          - goos: linux
+            goarch: arm64
+            output: flux-panel-backend-linux-arm64
+          - goos: windows
+            goarch: amd64
+            output: flux-panel-backend-windows-amd64.exe
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+
+      - name: Tidy modules
+        working-directory: ./go-panel-backend
+        run: go mod tidy
+
+      - name: Build backend binary
+        working-directory: ./go-panel-backend
+        env:
+          CGO_ENABLED: 0
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p ../release
+          go build -trimpath -ldflags="-s -w" -o ../release/${{ matrix.output }} .
+
+      - name: Package backend binary
+        run: |
+          mkdir -p packaged
+          tar -czf packaged/${{ matrix.output }}.tar.gz -C release ${{ matrix.output }}
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: packaged/*
+
+  frontend-artifact:
+    name: Build Frontend Artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: vite-frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./vite-frontend
+        run: npm install --legacy-peer-deps
+
+      - name: Build frontend
+        working-directory: ./vite-frontend
+        run: npm run build
+
+      - name: Package frontend dist
+        run: |
+          mkdir -p packaged
+          tar -czf packaged/vite-frontend-dist.tar.gz -C vite-frontend dist
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: packaged/vite-frontend-dist.tar.gz
+
+  docker-release-check:
+    name: Build Docker Images For Release
+    runs-on: ubuntu-latest
+    needs:
+      - backend-artifacts
+      - frontend-artifact
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./go-panel-backend
+          file: ./go-panel-backend/Dockerfile
+          push: false
+          tags: dlamgo/backend:release-check
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./vite-frontend
+          file: ./vite-frontend/Dockerfile
+          push: false
+          tags: dlamgo/frontend:release-check
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs:
+      - backend-artifacts
+      - frontend-artifact
+      - docker-release-check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download backend artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: backend-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: release-assets
+
+      - name: Prepare extra release files
+        run: |
+          cp docker-compose.yml release-assets/
+          cp .env.example release-assets/
+          cp DOCKER.md release-assets/
+          cp README.md release-assets/
+
+      - name: Generate checksums
+        working-directory: ./release-assets
+        run: |
+          sha256sum * > SHA256SUMS.txt
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            release-assets/*

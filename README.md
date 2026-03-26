@@ -434,7 +434,19 @@ curl -fsSL https://raw.githubusercontent.com/你的仓库/你的分支/install.s
 3. Docker 后端镜像构建检查
 4. Docker 前端镜像构建检查
 
-这个工作流默认用于 **持续集成校验**，不会默认帮你推送镜像到 Docker Hub，也不会自动创建 Release。
+这个工作流默认用于 **持续集成校验**，不会默认帮你推送镜像到 Docker Hub。
+
+仓库现在还包含一个独立的发布工作流：
+
+- `.github/workflows/release.yml`
+
+它会在你推送 `v*` 标签时自动：
+
+1. 构建 Go 后端发布二进制
+2. 构建前端静态产物
+3. 校验 Docker 镜像可构建
+4. 自动创建 GitHub Release
+5. 上传二进制、前端构建包、`docker-compose.yml`、`.env.example` 等附件
 
 如果你只是希望：
 
@@ -442,13 +454,11 @@ curl -fsSL https://raw.githubusercontent.com/你的仓库/你的分支/install.s
 
 那么当前工作流已经够用。
 
-如果你以后希望：
+如果你以后还希望：
 
-- 自动推送镜像
-- 自动打 tag
-- 自动创建 GitHub Release
+- 自动推送 Docker 镜像
 
-建议单独增加一个发布工作流，不要直接把当前 CI 工作流改成发布工作流。
+建议继续新增单独的镜像发布工作流，不要把当前 `release.yml` 和镜像推送强绑在一起。
 
 ---
 
